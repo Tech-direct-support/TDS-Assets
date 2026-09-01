@@ -1,26 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-white: #ffffff;
+  --color-black: #0a0a0a;
+  --color-red: #d6001c;
+  --color-red-dark: #a90016;
+  --color-red-tint: #fdecee;
+
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #4b4b4b;
+  --color-line: #e2e2e2;
+  --color-line-strong: #cfcfcf;
+  --color-surface: #ffffff;
+  --color-surface-muted: #fafafa;
+  --color-surface-sunken: #f4f4f4;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-white: var(--color-white);
+  --color-black: var(--color-black);
+  --color-red: var(--color-red);
+  --color-red-dark: var(--color-red-dark);
+  --color-red-tint: var(--color-red-tint);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-line: var(--color-line);
+  --color-line-strong: var(--color-line-strong);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+  font-family: var(--font-sans), "Segoe UI", Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+::selection {
+  background: var(--color-red);
+  color: var(--color-white);
+}
+
+.leaflet-container {
+  font-family: var(--font-sans), sans-serif;
 }
