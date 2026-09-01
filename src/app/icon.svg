@@ -1,0 +1,15 @@
+<!--
+  Browser tab / bookmark icon. Next.js picks this up from the app directory
+  automatically and emits the <link rel="icon"> for it.
+
+  The path is the same TDS "T" mark as src/components/TdsLogo.tsx — keep the two
+  in step if the mark changes. The viewBox is cropped tighter here than in the
+  component so the mark fills a 16px tab instead of floating in padding.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="88 92 336 336" role="img" aria-label="TDS">
+  <title>TDS</title>
+  <path
+    fill="#f93b3b"
+    d="M128 112 H384 V168 Q294 168 294 112 V352 Q294 408 240 408 H218 V112 Q218 168 128 168 Z"
+  />
+</svg>
