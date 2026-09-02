@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { TicketStatusControl } from "@/components/helpdesk/TicketStatusControl";
 import { TicketAiPanel } from "@/components/helpdesk/TicketAiPanel";
 import { TicketComments } from "@/components/helpdesk/TicketComments";
+import { TicketAttachments } from "@/components/helpdesk/TicketAttachments";
+import { getSignedUrls, TICKET_ATTACHMENTS_BUCKET } from "@/lib/storage";
 import { assetStatusTone, assetStatusLabel, ticketPriorityTone, titleCase } from "@/lib/badgeTones";
 
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
@@ -49,6 +51,26 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     author: c.is_ai ? "AI Assistant" : (c.author as unknown as { full_name: string } | null)?.full_name ?? "Unknown",
   }));
 
+  const { data: rawAttachments } = await supabase
+    .from("ticket_attachments")
+    .select("id, file_name, file_url, created_at, uploader:user_profiles(full_name)")
+    .eq("ticket_id", id)
+    .order("created_at", { ascending: false });
+
+  const signedUrls = await getSignedUrls(
+    supabase,
+    TICKET_ATTACHMENTS_BUCKET,
+    (rawAttachments ?? []).map((a) => a.file_url)
+  );
+
+  const attachments = (rawAttachments ?? []).map((a) => ({
+    id: a.id,
+    file_name: a.file_name,
+    url: signedUrls[a.file_url] ?? null,
+    created_at: a.created_at,
+    uploader: (a.uploader as unknown as { full_name: string } | null)?.full_name ?? "Unknown",
+  }));
+
   const asset = ticket.assets as unknown as { id: string; asset_tag: string; name: string; status: string; current: { name: string } | null } | null;
   const requester = ticket.requester as unknown as { full_name: string; email: string } | null;
 
@@ -74,6 +96,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           <Card>
             <h3 className="text-[13px] font-semibold text-ink mb-3">AI assistance</h3>
             <TicketAiPanel ticketId={ticket.id} subject={ticket.subject} description={ticket.description} />
+          </Card>
+
+          <Card>
+            <h3 className="text-[13px] font-semibold text-ink mb-3">Attachments</h3>
+            <TicketAttachments ticketId={ticket.id} attachments={attachments} />
           </Card>
 
           <Card>

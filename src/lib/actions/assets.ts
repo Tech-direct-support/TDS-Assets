@@ -6,7 +6,10 @@ import { requireSession } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { canTransition } from "@/lib/lifecycle";
 import { isPointInsideGeofence } from "@/lib/geofence";
+import { ASSET_PHOTOS_BUCKET } from "@/lib/storage";
 import type { Asset, AssetStatus, GeofenceShape } from "@/lib/types/database";
+
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 export interface AssetFormInput {
   asset_tag: string;
@@ -142,6 +145,69 @@ export async function transitionAssetStatus(assetId: string, toStatus: AssetStat
 
   revalidatePath(`/assets/${assetId}`);
   revalidatePath("/assets");
+  return { data: true };
+}
+
+export async function uploadAssetPhoto(assetId: string, formData: FormData) {
+  const session = await requireSession();
+  const supabase = await createClient();
+
+  const file = formData.get("photo");
+  if (!(file instanceof File) || file.size === 0) return { error: "No file selected." };
+  if (!file.type.startsWith("image/")) return { error: "Only image files are allowed." };
+  if (file.size > MAX_PHOTO_BYTES) return { error: "Image must be smaller than 5MB." };
+
+  const { data: asset } = await supabase.from("assets").select("image_path").eq("id", assetId).single();
+  if (!asset) return { error: "Asset not found." };
+
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${session.profile.tenant_id}/${assetId}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(ASSET_PHOTOS_BUCKET)
+    .upload(path, file, { contentType: file.type });
+  if (uploadError) return { error: uploadError.message };
+
+  if (asset.image_path) {
+    await supabase.storage.from(ASSET_PHOTOS_BUCKET).remove([asset.image_path]);
+  }
+
+  const { error: updateError } = await supabase.from("assets").update({ image_path: path }).eq("id", assetId);
+  if (updateError) return { error: updateError.message };
+
+  await logAudit(supabase, {
+    tenantId: session.profile.tenant_id,
+    entityType: "asset",
+    entityId: assetId,
+    action: "photo_updated",
+    actorId: session.userId,
+  });
+
+  revalidatePath(`/assets/${assetId}`);
+  return { data: true };
+}
+
+export async function removeAssetPhoto(assetId: string) {
+  const session = await requireSession();
+  const supabase = await createClient();
+
+  const { data: asset } = await supabase.from("assets").select("image_path").eq("id", assetId).single();
+  if (!asset?.image_path) return { data: true };
+
+  await supabase.storage.from(ASSET_PHOTOS_BUCKET).remove([asset.image_path]);
+
+  const { error } = await supabase.from("assets").update({ image_path: null }).eq("id", assetId);
+  if (error) return { error: error.message };
+
+  await logAudit(supabase, {
+    tenantId: session.profile.tenant_id,
+    entityType: "asset",
+    entityId: assetId,
+    action: "photo_removed",
+    actorId: session.userId,
+  });
+
+  revalidatePath(`/assets/${assetId}`);
   return { data: true };
 }
 

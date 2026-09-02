@@ -15,6 +15,7 @@ export function InviteUserDialog() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   return (
     <>
@@ -27,6 +28,7 @@ export function InviteUserDialog() {
             e.preventDefault();
             setSaving(true);
             setError(null);
+            setWarning(null);
             const fd = new FormData(e.currentTarget);
             const res = await inviteUser(
               String(fd.get("email")),
@@ -38,12 +40,18 @@ export function InviteUserDialog() {
               setError(res.error);
               return;
             }
+            if (res.warning) {
+              setWarning(res.warning);
+              router.refresh();
+              return;
+            }
             setOpen(false);
             router.refresh();
           }}
           className="space-y-3"
         >
           {error && <p className="text-[12px] text-red">{error}</p>}
+          {warning && <p className="text-[12px] text-amber-600">{warning}</p>}
           <div>
             <label className="block text-[12px] font-medium text-ink mb-1">Full Name</label>
             <input name="full_name" required className={inputClass} />

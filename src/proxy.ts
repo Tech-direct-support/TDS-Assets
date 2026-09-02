@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// /api/cron/* is a server-to-server endpoint (Vercel Cron) authenticated by
+// its own CRON_SECRET bearer check, not a browser session — it must not be
+// redirected to /login.
+const PUBLIC_PATHS = ["/login", "/auth", "/api/cron"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

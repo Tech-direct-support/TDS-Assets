@@ -12,6 +12,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LifecycleTimeline } from "@/components/assets/LifecycleTimeline";
 import { LifecycleControl } from "@/components/assets/LifecycleControl";
 import { ArchiveButton } from "@/components/assets/ArchiveButton";
+import { AssetPhotoCard } from "@/components/assets/AssetPhotoCard";
+import { getSignedUrl, ASSET_PHOTOS_BUCKET } from "@/lib/storage";
 import {
   assetStatusTone,
   assetStatusLabel,
@@ -67,6 +69,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const assignedUser = asset.assigned as unknown as { full_name: string; email: string } | null;
   const homeLocation = asset.home as unknown as { name: string } | null;
   const currentLocation = asset.current as unknown as { name: string } | null;
+  const photoUrl = asset.image_path ? await getSignedUrl(supabase, ASSET_PHOTOS_BUCKET, asset.image_path) : null;
 
   return (
     <div className="pb-10">
@@ -103,19 +106,23 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           )}
         </Card>
 
-        <Card>
-          <h3 className="text-[13px] font-semibold text-ink mb-3 flex items-center gap-1.5">
-            <MapPin size={14} /> Location
-          </h3>
-          <div className="space-y-3">
-            <Detail label="Current / Last Known" value={currentLocation?.name} />
-            <Detail label="Home / Approved" value={homeLocation?.name} />
-            <Detail
-              label="Last Seen"
-              value={asset.last_seen_at ? new Date(asset.last_seen_at).toLocaleString("en-AU") : undefined}
-            />
-          </div>
-        </Card>
+        <div className="space-y-3">
+          <AssetPhotoCard assetId={asset.id} photoUrl={photoUrl} canManage={canManage} />
+
+          <Card>
+            <h3 className="text-[13px] font-semibold text-ink mb-3 flex items-center gap-1.5">
+              <MapPin size={14} /> Location
+            </h3>
+            <div className="space-y-3">
+              <Detail label="Current / Last Known" value={currentLocation?.name} />
+              <Detail label="Home / Approved" value={homeLocation?.name} />
+              <Detail
+                label="Last Seen"
+                value={asset.last_seen_at ? new Date(asset.last_seen_at).toLocaleString("en-AU") : undefined}
+              />
+            </div>
+          </Card>
+        </div>
       </div>
 
       <div className="px-4 md:px-6 mt-3">

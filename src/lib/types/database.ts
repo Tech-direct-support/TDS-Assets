@@ -120,6 +120,9 @@ export interface Asset {
   status: AssetStatus;
   archived: boolean;
 
+  /** Storage object path within the asset-photos bucket, not a public URL. */
+  image_path: string | null;
+
   created_at: string;
   updated_at: string;
 }
@@ -196,6 +199,17 @@ export interface TicketComment {
   author_id: string | null;
   body: string;
   is_ai: boolean;
+  created_at: string;
+}
+
+export interface TicketAttachment {
+  id: string;
+  tenant_id: string;
+  ticket_id: string;
+  file_name: string;
+  /** Storage object path within the ticket-attachments bucket, not a public URL. */
+  file_url: string;
+  uploaded_by: string | null;
   created_at: string;
 }
 
